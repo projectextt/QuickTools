@@ -125,7 +125,13 @@ class SingletonUpdater:
 
         # pre-assign basic select-link function
         def select_link_function(self, tag):
-            return tag["zipball_url"]
+            # Lo paksa cari asset yang namanya spesifik 'QuickTools.zip'
+            for asset in tag.get("assets", []):
+                if asset.get("name") == "QuickTools.zip":
+                    return asset.get("browser_download_url")
+    
+            # Kalau tidak ketemu, baru balik ke default (Source Code)
+            return tag.get("zipball_url")
 
         self._select_link = select_link_function
 
