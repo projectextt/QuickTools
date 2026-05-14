@@ -68,8 +68,8 @@ class QT_Preferences(bpy.types.AddonPreferences):
 
     def draw(self, context):
         layout = self.layout
-        updater_ui.updater_draw_preferences(self, context)
         
+        # Panggil lewat modul yang di-import
         try:
             license_check.draw_preferences_license(self, context)
         except Exception as e:
@@ -77,12 +77,11 @@ class QT_Preferences(bpy.types.AddonPreferences):
 
         layout.separator()
 
-        
         # 2. Gambar Sistem Update (Hanya muncul jika lisensi aktif)
         if license_check.check_license(context):
             box = layout.box()
             # Panggil UI bawaan addon_updater
-            addon_updater_ops.update_settings_ui(self, context)
+            updater_ui.updater_draw_preferences(self, context)
         else:
             layout.label(text="Aktifkan lisensi untuk fitur update otomatis.", icon='INFO')
 
@@ -137,8 +136,8 @@ def unregister():
     quick_pose_core.unregister()
     manager_logic.unregister()
     library_logic.unregister()
-    updater_ui()
-    updater_core()
+    updater_ui.unregister()
+    updater_core.unregister()
     license_check.unregister()
     
     bpy.utils.unregister_class(QT_Preferences)
