@@ -13,11 +13,13 @@ import importlib
 from bpy.app.handlers import persistent
 
 # --- IMPORT ---
-from . import addon_updater_ops
+#from . import addon_updater_ops
 
-from .utils import  (
-        license_check,
-        )
+from .utils import (
+            license_check,
+            updater_core,
+            updater_ui
+            )
 
 from .core import   (
         library_logic,
@@ -62,19 +64,11 @@ class QT_Preferences(bpy.types.AddonPreferences):
         subtype='PASSWORD'
     )
 
-    # --- PROPERTI TAMBAHAN UNTUK UPDATER ---
-    auto_check_update: bpy.props.BoolProperty(
-        name="Auto-check for updates",
-        description="If enabled, auto-check for updates using an interval",
-        default=False,
-    )
-    updater_interval_months: bpy.props.IntProperty(name='Bulan', default=0)
-    updater_interval_days: bpy.props.IntProperty(name='Hari', default=1)
-    updater_interval_hours: bpy.props.IntProperty(name='Jam', default=0)
-    updater_interval_minutes: bpy.props.IntProperty(name='Menit', default=0)
+    
 
     def draw(self, context):
         layout = self.layout
+        updater_ui.updater_draw_preferences(self, context)
         
         try:
             license_check.draw_preferences_license(self, context)
@@ -107,6 +101,8 @@ def register():
         bpy.app.timers.register(timer_func)
     
     license_check.register()
+    updater_core()
+    updater_ui()
     library_logic.register()
     manager_logic.register()
     quick_pose_core.register()
@@ -147,6 +143,8 @@ def unregister():
     quick_pose_core.unregister()
     manager_logic.unregister()
     library_logic.unregister()
+    updater_ui()
+    updater_core()
     license_check.unregister()
     
     bpy.utils.unregister_class(QT_Preferences)
