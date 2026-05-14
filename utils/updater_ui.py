@@ -4,7 +4,7 @@ from . import updater_core
 class QT_OT_CheckUpdate(bpy.types.Operator):
     bl_idname = "quicktools.check_update"
     bl_label = "Check for Update"
-    bl_description = "Cek apakah ada versi baru di GitHub"
+    bl_description = "Cek apakah ada versi baru"
 
     def execute(self, context):
         updater_core.check_for_update()
@@ -38,6 +38,16 @@ class QT_OT_UpdateSuccessReport(bpy.types.Operator):
         col.label(text="QuickTools berhasil di-update!", icon='FILE_TICK')
         col.label(text="Klik OK untuk menutup Blender")
         col.label(text="Pastikan kerjaan udah disave")
+
+# --- OPERATOR RESTORE ---
+class QT_OT_RestoreBackup(bpy.types.Operator):
+    bl_idname = "quicktools.restore_backup"
+    bl_label = "Kembalikan Versi Sebelumnya"
+    bl_description = "Mengembalikan QuickTools ke versi sebelum update terakhir"
+
+    def execute(self, context):
+        updater_core.run_restore_process()
+        return {'FINISHED'}
 
 def updater_draw_preferences(parent, context):
     layout = parent.layout
@@ -88,13 +98,29 @@ def updater_draw_preferences(parent, context):
         row_btn = sub_col.row()
         row_btn.scale_y = 1.5
         row_btn.operator("quicktools.do_update", text=f"Install Update v{updater_core.latest_version}")
+        
+    # --- FITUR RESTORE (Dinamis - Muncul jika ada backup) ---
+    if updater_core.check_backup_exists():
+        main_box.separator()
+        # Pakai box kecil biar terpisah dari area update
+        restore_box = main_box.box()
+        col_res = restore_box.column(align=True)
+        
+        col_res.label(text="Pencadangan Versi Sebelumnya", icon='RECOVER_LAST')
+        
+        # Tombol Restore dibuat lebih kalem (skala lebih kecil)
+        row_res = col_res.row()
+        row_res.scale_y = 0.9
+        row_res.operator("quicktools.restore_backup", text="Kembalikan ke Versi Sebelumnya", icon='LOOP_BACK')
 
 def register():
     bpy.utils.register_class(QT_OT_CheckUpdate)
     bpy.utils.register_class(QT_OT_DoUpdate)
     bpy.utils.register_class(QT_OT_UpdateSuccessReport)
+    bpy.utils.register_class(QT_OT_RestoreBackup)
 
 def unregister():
+    bpy.utils.unregister_class(QT_OT_RestoreBackup)
     bpy.utils.unregister_class(QT_OT_UpdateSuccessReport)
     bpy.utils.unregister_class(QT_OT_DoUpdate)
     bpy.utils.unregister_class(QT_OT_RestartBlender)

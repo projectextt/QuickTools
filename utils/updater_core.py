@@ -114,6 +114,35 @@ def run_update_process():
     except Exception as e:
         show_message(str(e), title="Update Gagal", icon='ERROR')
 
+def check_backup_exists():
+    """Cek apakah folder backup ada isinya"""
+    backup_addon_path = os.path.join(backup_path, "QuickTools_Backup")
+    return os.path.exists(backup_addon_path)
+
+def run_restore_process():
+    """Proses mengembalikan addon ke versi sebelumnya"""
+    try:
+        backup_addon_path = os.path.join(backup_path, "QuickTools_Backup")
+        addon_dir = os.path.dirname(os.path.dirname(__file__))
+
+        # RAWAN 1: Cek folder backup
+        if not os.path.exists(backup_addon_path):
+            raise Exception("Folder backup tidak ditemukan!")
+
+        # RAWAN 2: Hapus versi yang sekarang (Cleaning)
+        # Kita hapus dulu folder yang sekarang biar gak numpuk
+        if os.path.exists(addon_dir):
+            shutil.rmtree(addon_dir)
+
+        # RAWAN 3: Copy balik dari backup
+        shutil.copytree(backup_addon_path, addon_dir)
+
+        # Berhasil! Panggil dialog sukses
+        bpy.ops.quicktools.update_success_report('INVOKE_DEFAULT')
+
+    except Exception as e:
+        show_message(f"Restore Gagal: {str(e)}", title="Error Restore", icon='ERROR')
+
 def register():
     if not os.path.exists(doc_path): os.makedirs(doc_path)
 
