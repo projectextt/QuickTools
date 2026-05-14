@@ -41,20 +41,53 @@ class QT_OT_UpdateSuccessReport(bpy.types.Operator):
 
 def updater_draw_preferences(parent, context):
     layout = parent.layout
-    col = layout.column(align=True)
-    col.separator()
-    col.label(text="QuickTools Updater", icon='FILE_REFRESH')
     
-    col.separator()
-    col.separator()
+    # 1. Gunakan Box agar terpisah secara visual
+    main_box = layout.box()
     
-    # Tombol Check
-    col.operator("quicktools.check_update", icon='WORLD')
+    # Header dengan Icon
+    header = main_box.row()
+    header.label(text="QUICKTOOLS AUTO-UPDATER", icon='SETTINGS')
     
-    # Munculkan tombol install jika ada update
-    if updater_core.update_available:
-        col.alert = True
-        col.operator("quicktools.do_update", text=f"Install Update v{updater_core.latest_version}")
+    # Baris Info Versi
+    row_ver = main_box.row(align=True)
+    current_ver_str = ".".join(map(str, updater_core.CURRENT_VERSION))
+    
+    # Gunakan split agar label dan info sejajar rapi
+    split = row_ver.split(factor=0.4)
+    split.label(text="Installed Version:", icon='FILE_TICK')
+    split.label(text=current_ver_str)
+    
+    main_box.separator()
+
+    # 2. Area Aksi (Tombol)
+    col = main_box.column(align=True)
+    
+    if not updater_core.update_available:
+        # Tampilan jika sudah versi terbaru (Lebih kalem)
+        row = col.row(align=True)
+        row.scale_y = 1.2
+        row.operator("quicktools.check_update", text="Check for Updates", icon='WORLD')
+        
+        # Info tambahan kecil di bawahnya
+        col.label(text="Versi yg lu pasang udeh paling baru.", icon='CHECKMARK')
+        
+    else:
+        # Tampilan jika ADA update (Lebih mencolok/Alert)
+        box_update = col.box()
+        sub_col = box_update.column(align=True)
+        
+        # Info versi baru
+        row_new = sub_col.row()
+        row_new.alert = True
+        row_new.label(text=f"Versi Baru Tersedia: v{updater_core.latest_version}", icon='info')
+        
+        sub_col.separator()
+        
+        # Tombol Update yang besar dan jelas
+        row_btn = sub_col.row()
+        row_btn.scale_y = 1.5
+        row_btn.operator("quicktools.do_update", text=f"Install Update v{updater_core.latest_version}")
 
 def register():
     bpy.utils.register_class(QT_OT_CheckUpdate)
