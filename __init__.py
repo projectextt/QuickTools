@@ -64,7 +64,10 @@ class QT_Preferences(bpy.types.AddonPreferences):
         subtype='PASSWORD'
     )
 
-    
+    last_update_check: bpy.props.StringProperty(
+        name="Terakhir Cek Update",
+        default="Belum pernah diperiksa"
+    )
 
     def draw(self, context):
         layout = self.layout
