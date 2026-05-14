@@ -109,12 +109,7 @@ def run_update_process():
                 shutil.copy2(s, d)
 
         # 8. Selesai
-        def draw_success(self, context):
-            self.layout.label(text="Update Selesai! Blender perlu ditutup untuk menerapkan perubahan.")
-            self.layout.label(text="Silakan buka kembali Blender setelah ini.")
-
-        bpy.context.window_manager.popup_menu(draw_success, title="Update Berhasil", icon='CHECKMARK')
-        bpy.ops.wm.quit_blender()
+        bpy.ops.quicktools.update_success_report('INVOKE_DEFAULT')
         
     except Exception as e:
         show_message(str(e), title="Update Gagal", icon='ERROR')
