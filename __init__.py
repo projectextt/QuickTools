@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Quick Tools",
     "author": "projectextt",
-    "version": (4, 0, 2),
+    "version": (4, 0, 1),
     "blender": (4, 2, 0),
     "location": "View3D > Sidebar > QuickTools",
     "description": "Kumpulan tools animasi dalam satu tab",
@@ -12,13 +12,8 @@ import bpy
 import importlib
 from bpy.app.handlers import persistent
 
-# --- IMPORT ---
-#from . import addon_updater_ops
-
 from .utils import (
             license_check,
-            updater_core,
-            updater_ui
             )
 
 from .core import   (
@@ -34,12 +29,14 @@ from .core import   (
         quick_display_layer,
         empty_logic,
         path_logic,
+        updater_core,
         )
 
-# ui
-from .ui import main_panel
+from .ui import (
+            main_panel,
+            updater_ui,
+            )
 
-# core.insert
 from .core.insert import child_preset_logic
 
 
@@ -66,13 +63,12 @@ class QT_Preferences(bpy.types.AddonPreferences):
 
     last_update_check: bpy.props.StringProperty(
         name="Terakhir Cek Update",
-        default="Belum pernah diperiksa"
+        default="Belon pernah diperiksa"
     )
 
     def draw(self, context):
         layout = self.layout
         
-        # Panggil lewat modul yang di-import
         try:
             license_check.draw_preferences_license(self, context)
         except Exception as e:
@@ -80,13 +76,11 @@ class QT_Preferences(bpy.types.AddonPreferences):
 
         layout.separator()
 
-        # 2. Gambar Sistem Update (Hanya muncul jika lisensi aktif)
         if license_check.check_license(context):
             box = layout.box()
-            # Panggil UI bawaan addon_updater
             updater_ui.updater_draw_preferences(self, context)
         else:
-            layout.label(text="Aktifkan lisensi untuk fitur update otomatis.", icon='INFO')
+            layout.label(text="Aktifkan lisensi untuk fitur lengkapnya.", icon='INFO')
 
 
 def register():
