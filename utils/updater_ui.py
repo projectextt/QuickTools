@@ -80,7 +80,7 @@ def updater_draw_preferences(parent, context):
         # Info versi baru
         row_new = sub_col.row()
         row_new.alert = True
-        row_new.label(text=f"Versi Baru Tersedia: v{updater_core.latest_version}", icon='info')
+        row_new.label(text=f"Versi Baru Tersedia: v{updater_core.latest_version}", icon='INFO')
         
         sub_col.separator()
         
