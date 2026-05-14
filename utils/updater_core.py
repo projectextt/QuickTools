@@ -130,9 +130,18 @@ def run_update_process():
         show_message(str(e), title="Update Gagal", icon='ERROR')
 
 def check_backup_exists():
-    """Cek apakah folder backup ada isinya"""
-    backup_addon_path = os.path.join(backup_path, "QuickTools_Backup")
-    return os.path.exists(backup_addon_path)
+    """Cek keberadaan folder backup dengan proteksi rintangan"""
+    try:
+        # Ganti dengan path absolut lo
+        backup_addon_path = os.path.join(backup_path, "QuickTools_Backup")
+        if os.path.exists(backup_addon_path) and os.path.isdir(backup_addon_path):
+            # Pastikan folder gak kosong
+            return len(os.listdir(backup_addon_path)) > 0
+        return False
+    except Exception as e:
+        # Self-report ke console tanpa bikin UI mati
+        print(f"QuickTools Backup Check Error: {e}")
+        return False
 
 def run_restore_process():
     """Proses mengembalikan addon ke versi sebelumnya"""

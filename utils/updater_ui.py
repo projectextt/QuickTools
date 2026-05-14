@@ -51,58 +51,76 @@ class QT_OT_RestoreBackup(bpy.types.Operator):
 
 def updater_draw_preferences(parent, context):
     layout = parent.layout
-    core = updater_core # Alias biar pendek manggilnya
+    core = updater_core
     
+    # Bungkus dalam satu Box utama
     main_box = layout.box()
     
-    # 1. HEADER & INFO VERSI (Tetap ada di semua kondisi)
-    row_info = main_box.row()
-    row_info.label(text="QUICKTOOLS UPDATER", icon='SETTINGS')
+    # Header & Info Versi (Statis)
+    header = main_box.row()
+    header.label(text="PENGATURAN PEMBARUAN QUICKTOOLS", icon='SETTINGS')
     
     curr_v = ".".join(map(str, core.CURRENT_VERSION))
-    row_info.label(text=f"Versi: {curr_v}")
+    header.label(text=f"Versi: {curr_v}")
 
     main_box.separator()
 
-    # 2. STATE-BASED UI (Logika Kondisional)
+    # --- BARIS AKSI UTAMA (Side-by-Side) ---
+    # Kita bagi dua kolom: Kiri (Status/Update), Kanan (Restore)
+    row_action = main_box.row(align=False)
+    row_action.scale_y = 1.3
+
+    # === SISI KIRI: STATUS / UPDATE ===
+    col_left = row_action.column(align=True)
     
-    # --- KONDISI: LATEST (Sudah Terbaru) ---
-    if core.status == 'LATEST':
-        row = main_box.row(align=True)
-        # Sisi Kiri: Label status
-        row.label(text="Versi lu udeh paling baru.", icon='CHECKMARK')
-        # Sisi Kanan: Tombol Refresh kecil (Style side-by-side)
-        row.operator("quicktools.check_update", text="", icon='FILE_REFRESH')
-
-    # --- KONDISI: CHECKING (Lagi Loading) ---
-    elif core.status == 'CHECKING':
-        row = main_box.row()
-        row.enabled = False # Matikan tombol biar gak di-spam
-        row.operator("quicktools.check_update", text="Menghubungi GitHub...", icon='WORLD')
-
-    # --- KONDISI: UPDATE_READY (Ada Barang Baru) ---
-    elif core.status == 'UPDATE_READY' or core.update_available:
-        row_action = main_box.row(align=False)
-        row_action.scale_y = 1.3
+    if core.status == 'CHECKING':
+        col_left.enabled = False
+        col_left.operator("quicktools.check_update", text="Menghubungi GitHub...", icon='WORLD')
+    
+    elif core.status == 'UPDATE_READY':
+        col_left.alert = True
+        col_left.operator("quicktools.do_update", text=f"Instal Update v{core.latest_version}", icon='IMPORT')
         
-        # Tombol Update (Kiri)
-        col_up = row_action.column(align=True)
-        col_up.alert = True
-        col_up.operator("quicktools.do_update", text=f"Instal v{core.latest_version}", icon='IMPORT')
-        
-        # Tombol Restore (Kanan - Jika ada backup)
-        if core.check_backup_exists():
-            col_res = row_action.column(align=True)
-            col_res.operator("quicktools.restore_backup", text="Kembalikan Versi", icon='LOOP_BACK')
-
-    # --- KONDISI: IDLE / ERROR (Kondisi Awal atau Gagal) ---
     else:
-        col = main_box.column(align=True)
-        if core.status == 'ERROR':
-            col.label(text=core.error_message, icon='ERROR')
+        # Kondisi LATEST atau IDLE
+        sub_row = col_left.row(align=True)
         
-        col.scale_y = 1.2
-        col.operator("quicktools.check_update", text="Periksa Pembaruan Sekarang", icon='WORLD')
+        # Tombol Label (Mati jika sudah terbaru)
+        btn_label = "Versi lu udeh paling baru." if core.status == 'LATEST' else "Periksa Pembaruan Sekarang"
+        label_op = sub_row.operator("quicktools.check_update", text=btn_label)
+        if core.status == 'LATEST':
+            sub_row.enabled = False # Tombol kiri jadi abu-abu
+            
+        # Tombol Refresh Kecil (Selalu Aktif di sebelah kanan label)
+        refresh_row = sub_col_refresh = sub_row.column(align=True) # Trick buat dapet kolom baru dlm row
+        refresh_row.enabled = True 
+        refresh_row.operator("quicktools.check_update", text="", icon='FILE_REFRESH')
+
+    # === SISI KANAN: MAINTENANCE / RESTORE ===
+    col_right = row_action.column(align=True)
+    
+    # Cek folder backup dengan Try-Except (Self-Report)
+    backup_ready = False
+    try:
+        backup_ready = core.check_backup_exists()
+    except Exception as e:
+        print(f"QuickTools Error: Gagal akses folder backup - {e}")
+        # Tetap False jika error
+
+    # Tombol Restore (Selalu ada, tapi Disable kalau gak ada backup)
+    row_res = col_right.row()
+    row_res.enabled = backup_ready
+    row_res.operator("quicktools.restore_backup", text="Kembalikan Versi", icon='LOOP_BACK')
+
+    # --- FOOTER INFO ---
+    main_box.separator()
+    footer = main_box.row()
+    footer.scale_y = 0.8
+    
+    if core.status == 'ERROR':
+        footer.label(text=core.error_message, icon='ERROR')
+    else:
+        footer.label(text=f"Terakhir diperiksa: {core.last_check}", icon='TIME')
 
     # 3. FOOTER (Informasi Terakhir Dicek)
     main_box.separator()
