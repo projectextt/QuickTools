@@ -1,10 +1,27 @@
 import bpy, os, shutil, urllib.request, zipfile, json
 import addon_utils
+from datetime import datetime
 
 # --- CONFIG ---
 GITHUB_USER = "projectextt"
 GITHUB_REPO = "QuickTools"
 TOKEN = "" # Kosongkan jika Public. Isi "ghp_xxx" jika Private.
+
+
+# --- PATHS ---
+doc_path = os.path.join(os.path.expanduser("~"), "Documents", "QuickTools", "Blender 4.2", "__updater__")
+backup_path = os.path.join(doc_path, "__backup__")
+source_path = os.path.join(doc_path, "__source__")
+
+
+# --- STATE MANAGEMENT ---
+# Status: 'IDLE', 'CHECKING', 'UPDATE_READY', 'LATEST', 'ERROR'
+status = 'IDLE'
+last_check = "Belum pernah diperiksa"
+update_available = False
+latest_version = ""
+download_url = ""
+error_message = ""
 
 # Ambil versi dari metadata addon secara otomatis
 def get_current_version():
@@ -18,44 +35,42 @@ def get_current_version():
 
 CURRENT_VERSION = get_current_version()
 
-# --- PATHS ---
-doc_path = os.path.join(os.path.expanduser("~"), "Documents", "QuickTools", "Blender 4.2", "__updater__")
-backup_path = os.path.join(doc_path, "__backup__")
-source_path = os.path.join(doc_path, "__source__")
-
-update_available = False
-latest_version = ""
-download_url = ""
-
 def show_message(message="", title="QuickTools Update", icon='INFO'):
     def draw(self, context): self.layout.label(text=message)
     bpy.context.window_manager.popup_menu(draw, title=title, icon=icon)
 
 def check_for_update():
-    global update_available, latest_version, download_url
+    global status, update_available, latest_version, download_url, last_check, error_message
+    
+    # RAWAN 1: Koneksi internet & Parsing JSON
     try:
+        status = 'CHECKING'
+        # Update waktu pemeriksaan
+        last_check = datetime.now().strftime("%d-%m-%Y %H:%M")
+        
         url = f"https://api.github.com/repos/{GITHUB_USER}/{GITHUB_REPO}/releases/latest"
         req = urllib.request.Request(url)
         if TOKEN: req.add_header('Authorization', f'token {TOKEN}')
         
-        with urllib.request.urlopen(req) as response:
+        with urllib.request.urlopen(req, timeout=10) as response:
             data = json.loads(response.read().decode())
             tag = data['tag_name'].replace('v', '').replace('update ', '')
-            
-            # Konversi tag string ke tuple (misal "4.0.9" -> (4,0,9))
             ver_tuple = tuple(map(int, tag.split('.')))
             
             if ver_tuple > CURRENT_VERSION:
+                status = 'UPDATE_READY'
                 update_available = True
                 latest_version = tag
                 download_url = data['zipball_url']
-                show_message(f"Update Tersedia: v{tag}", title="Update Found")
             else:
+                status = 'LATEST'
                 update_available = False
-                current_ver_str = ".".join(map(str, CURRENT_VERSION))
-                show_message(f"QuickTools v{current_ver_str} sudah versi terbaru.", title="Latest Version")
+                
     except Exception as e:
-        show_message(f"Cek Gagal: {str(e)}", title="Error", icon='ERROR')
+        status = 'ERROR'
+        error_message = f"Gagal cek update: {str(e)}"
+        # Self-report ke console dan popup
+        print(f"DEBUG: {error_message}")
 
 def run_update_process():
     try:

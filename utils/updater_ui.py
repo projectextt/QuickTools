@@ -51,67 +51,62 @@ class QT_OT_RestoreBackup(bpy.types.Operator):
 
 def updater_draw_preferences(parent, context):
     layout = parent.layout
+    core = updater_core # Alias biar pendek manggilnya
     
-    # 1. Gunakan Box agar terpisah secara visual
     main_box = layout.box()
     
-    # Header dengan Icon
-    header = main_box.row()
-    header.label(text="QUICKTOOLS AUTO-UPDATER", icon='SETTINGS')
+    # 1. HEADER & INFO VERSI (Tetap ada di semua kondisi)
+    row_info = main_box.row()
+    row_info.label(text="QUICKTOOLS UPDATER", icon='SETTINGS')
     
-    # Baris Info Versi
-    row_ver = main_box.row(align=True)
-    current_ver_str = ".".join(map(str, updater_core.CURRENT_VERSION))
-    
-    # Gunakan split agar label dan info sejajar rapi
-    split = row_ver.split(factor=0.4)
-    split.label(text="Installed Version:", icon='FILE_TICK')
-    split.label(text=current_ver_str)
-    
+    curr_v = ".".join(map(str, core.CURRENT_VERSION))
+    row_info.label(text=f"Versi: {curr_v}")
+
     main_box.separator()
 
-    # 2. Area Aksi (Tombol)
-    col = main_box.column(align=True)
+    # 2. STATE-BASED UI (Logika Kondisional)
     
-    if not updater_core.update_available:
-        # Tampilan jika sudah versi terbaru (Lebih kalem)
-        row = col.row(align=True)
-        row.scale_y = 1.2
-        row.operator("quicktools.check_update", text="Check for Updates", icon='WORLD')
+    # --- KONDISI: LATEST (Sudah Terbaru) ---
+    if core.status == 'LATEST':
+        row = main_box.row(align=True)
+        # Sisi Kiri: Label status
+        row.label(text="Versi lu udeh paling baru.", icon='CHECKMARK')
+        # Sisi Kanan: Tombol Refresh kecil (Style side-by-side)
+        row.operator("quicktools.check_update", text="", icon='FILE_REFRESH')
+
+    # --- KONDISI: CHECKING (Lagi Loading) ---
+    elif core.status == 'CHECKING':
+        row = main_box.row()
+        row.enabled = False # Matikan tombol biar gak di-spam
+        row.operator("quicktools.check_update", text="Menghubungi GitHub...", icon='WORLD')
+
+    # --- KONDISI: UPDATE_READY (Ada Barang Baru) ---
+    elif core.status == 'UPDATE_READY' or core.update_available:
+        row_action = main_box.row(align=False)
+        row_action.scale_y = 1.3
         
-        # Info tambahan kecil di bawahnya
-        col.label(text="Versi yg lu pasang udeh paling baru.", icon='CHECKMARK')
+        # Tombol Update (Kiri)
+        col_up = row_action.column(align=True)
+        col_up.alert = True
+        col_up.operator("quicktools.do_update", text=f"Instal v{core.latest_version}", icon='IMPORT')
         
+        # Tombol Restore (Kanan - Jika ada backup)
+        if core.check_backup_exists():
+            col_res = row_action.column(align=True)
+            col_res.operator("quicktools.restore_backup", text="Kembalikan Versi", icon='LOOP_BACK')
+
+    # --- KONDISI: IDLE / ERROR (Kondisi Awal atau Gagal) ---
     else:
-        # Tampilan jika ADA update (Lebih mencolok/Alert)
-        box_update = col.box()
-        sub_col = box_update.column(align=True)
+        col = main_box.column(align=True)
+        if core.status == 'ERROR':
+            col.label(text=core.error_message, icon='ERROR')
         
-        # Info versi baru
-        row_new = sub_col.row()
-        row_new.alert = True
-        row_new.label(text=f"Versi Baru Tersedia: v{updater_core.latest_version}", icon='INFO')
-        
-        sub_col.separator()
-        
-        # Tombol Update yang besar dan jelas
-        row_btn = sub_col.row()
-        row_btn.scale_y = 1.5
-        row_btn.operator("quicktools.do_update", text=f"Install Update v{updater_core.latest_version}")
-        
-    # --- FITUR RESTORE (Dinamis - Muncul jika ada backup) ---
-    if updater_core.check_backup_exists():
-        main_box.separator()
-        # Pakai box kecil biar terpisah dari area update
-        restore_box = main_box.box()
-        col_res = restore_box.column(align=True)
-        
-        col_res.label(text="Pencadangan Versi Sebelumnya", icon='RECOVER_LAST')
-        
-        # Tombol Restore dibuat lebih kalem (skala lebih kecil)
-        row_res = col_res.row()
-        row_res.scale_y = 0.9
-        row_res.operator("quicktools.restore_backup", text="Kembalikan ke Versi Sebelumnya", icon='LOOP_BACK')
+        col.scale_y = 1.2
+        col.operator("quicktools.check_update", text="Periksa Pembaruan Sekarang", icon='WORLD')
+
+    # 3. FOOTER (Informasi Terakhir Dicek)
+    main_box.separator()
+    main_box.label(text=f"Terakhir diperiksa: {core.last_check}", icon='TIME')
 
 def register():
     bpy.utils.register_class(QT_OT_CheckUpdate)
