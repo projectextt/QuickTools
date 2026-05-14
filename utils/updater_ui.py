@@ -36,7 +36,8 @@ class QT_OT_UpdateSuccessReport(bpy.types.Operator):
         layout = self.layout
         col = layout.column(align=True)
         col.label(text="QuickTools berhasil di-update!", icon='FILE_TICK')
-        col.label(text="Klik OK untuk menutup Blender dan menerapkan perubahan.", icon='BLANK1')
+        col.label(text="Klik OK untuk menutup Blender")
+        col.label(text="Pastikan kerjaan udah disave")
 
 def updater_draw_preferences(parent, context):
     layout = parent.layout
