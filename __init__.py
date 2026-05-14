@@ -88,9 +88,6 @@ class QT_Preferences(bpy.types.AddonPreferences):
 
 
 def register():
-    # Register Updater
-    addon_updater_ops.register(bl_info)
-    
     bpy.utils.register_class(QT_Preferences)
     
     if reload_preview_on_load not in bpy.app.handlers.load_post:
@@ -119,9 +116,6 @@ def register():
     main_panel.register()
     
 def unregister():
-    # Unregister Updater
-    addon_updater_ops.unregister()
-    
     timer_func = manager_logic.slb_preview_timer
     if bpy.app.timers.is_registered(timer_func):
         bpy.app.timers.unregister(timer_func)
