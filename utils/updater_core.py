@@ -1,4 +1,5 @@
 import bpy, os, shutil, urllib.request, zipfile, json
+import addon_utils
 
 # --- CONFIG ---
 GITHUB_USER = "projectextt"
@@ -6,18 +7,16 @@ GITHUB_REPO = "QuickTools"
 TOKEN = "" # Kosongkan jika Public. Isi "ghp_xxx" jika Private.
 
 # Ambil versi dari metadata addon secara otomatis
-addon_name = __package__.split('.')[0]
-addon_info = bpy.context.preferences.addons.get(addon_name)
+def get_current_version():
+    """Mengambil versi langsung dari bl_info addon ini secara akurat"""
+    addon_name = __package__.split('.')[0]
+    for mod in addon_utils.modules():
+        if mod.__name__ == addon_name:
+            # Mengambil tuple version, misal (4, 0, 1)
+            return mod.bl_info.get('version', (0, 0, 0))
+    return (0, 0, 0)
 
-if addon_info:
-    # Coba pake bl_info dulu (Legacy), kalau gak ada baru cari di metadata (Extension)
-    if hasattr(addon_info, "bl_info"):
-        CURRENT_VERSION = addon_info.bl_info.get('version', (0, 0, 0))
-    else:
-        # Fallback buat sistem extension
-        CURRENT_VERSION = getattr(addon_info, "metadata", {}).get('version', (0, 0, 0))
-else:
-    CURRENT_VERSION = (0, 0, 0)
+CURRENT_VERSION = get_current_version()
 
 # --- PATHS ---
 doc_path = os.path.join(os.path.expanduser("~"), "Documents", "QuickTools", "Blender 4.2", "__updater__")
