@@ -53,6 +53,10 @@ def updater_draw_preferences(parent, context):
     layout = parent.layout
     core = updater_core
     
+    # Ambil data tanggal dari Preferences (Bukan dari variabel sementara)
+    addon_name = __package__.split('.')[0]
+    prefs = context.preferences.addons[addon_name].preferences
+    
     # Bungkus dalam satu Box utama
     main_box = layout.box()
     
@@ -65,41 +69,33 @@ def updater_draw_preferences(parent, context):
 
     main_box.separator()
 
-    # --- BARIS AKSI UTAMA (Side-by-Side) ---
-    # Kita bagi dua kolom: Kiri (Status/Update), Kanan (Restore)
-    row_action = main_box.row(align=False)
+    # 2. AREA AKSI (Side-by-Side Statis)
+    row_action = main_box.row(align=True) # align=True biar nempel rapi tapi punya sekat
     row_action.scale_y = 1.3
 
-    # === SISI KIRI: STATUS / UPDATE ===
-    col_left = row_action.column(align=True)
+    # --- SISI KIRI: TOMBOL UTAMA (CEK / INSTAL) ---
+    col_main = row_action.column(align=True)
     
     if core.status == 'CHECKING':
-        col_left.enabled = False
-        col_left.operator("quicktools.check_update", text="Menghubungi server...", icon='WORLD')
-    
+        col_main.enabled = False
+        col_main.operator("quicktools.check_update", text="Menghubungi GitHub...", icon='WORLD')
     elif core.status == 'UPDATE_READY':
-        col_left.alert = True
-        col_left.operator("quicktools.do_update", text=f"Instal Update v{core.latest_version}", icon='IMPORT')
-        
+        col_main.alert = True # Warna Merah
+        col_main.operator("quicktools.do_update", text=f"Instal v{core.latest_version}", icon='IMPORT')
     else:
-        # Trik agar Label mati tapi Refresh tetap nyala:
-        sub_row = col_left.row(align=True)
-        
-        # 1. Bikin kolom khusus untuk Label (Mati jika LATEST)
-        col_label = sub_row.column(align=True)
-        if core.status == 'LATEST':
-            col_label.enabled = False 
-        
-        btn_label = "Versi lu udeh paling baru." if core.status == 'LATEST' else "Periksa Pembaruan Sekarang"
-        col_label.operator("quicktools.check_update", text=btn_label)
-            
-        # 2. Bikin kolom khusus untuk Refresh (Selalu Nyala)
-        col_refresh = sub_row.column(align=True)
-        col_refresh.enabled = True 
-        col_refresh.operator("quicktools.check_update", text="", icon='FILE_REFRESH')
+        # Kondisi LATEST atau IDLE
+        col_main.enabled = (core.status != 'LATEST') # Mati cuma kalau statusnya LATEST
+        btn_text = "Versi lu udeh paling baru." if core.status == 'LATEST' else "Periksa Pembaruan"
+        col_main.operator("quicktools.check_update", text=btn_text)
+
+    # --- SISI KANAN: TOMBOL REFRESH (SELALU ADA & NYALA) ---
+    col_refresh = row_action.column(align=True)
+    col_refresh.scale_x = 1.2 # Biar kotaknya agak proporsional buat ikon
+    col_refresh.operator("quicktools.check_update", text="", icon='FILE_REFRESH')
 
     # === SISI KANAN: MAINTENANCE / RESTORE ===
-    col_right = row_action.column(align=True)
+    row_action.separator()
+    col_res = row_action.column(align=True)
     
     # Cek folder backup dengan Try-Except (Self-Report)
     backup_ready = False

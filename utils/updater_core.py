@@ -45,8 +45,14 @@ def check_for_update():
     # RAWAN 1: Koneksi internet & Parsing JSON
     try:
         status = 'CHECKING'
-        # Update waktu pemeriksaan
-        last_check = datetime.now().strftime("%d-%m-%Y %H:%M")
+        
+        # Ambil akses ke Preferences buat nyatet waktu
+        addon_name = __package__.split('.')[0]
+        prefs = bpy.context.preferences.addons[addon_name].preferences
+        
+        # Catat waktu sekarang
+        now_time = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
+        prefs.last_update_check = now_time # Simpan permanen!
         
         url = f"https://api.github.com/repos/{GITHUB_USER}/{GITHUB_REPO}/releases/latest"
         req = urllib.request.Request(url)
