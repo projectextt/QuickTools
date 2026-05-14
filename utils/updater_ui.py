@@ -75,26 +75,28 @@ def updater_draw_preferences(parent, context):
     
     if core.status == 'CHECKING':
         col_left.enabled = False
-        col_left.operator("quicktools.check_update", text="Menghubungi GitHub...", icon='WORLD')
+        col_left.operator("quicktools.check_update", text="Menghubungi server...", icon='WORLD')
     
     elif core.status == 'UPDATE_READY':
         col_left.alert = True
         col_left.operator("quicktools.do_update", text=f"Instal Update v{core.latest_version}", icon='IMPORT')
         
     else:
-        # Kondisi LATEST atau IDLE
+        # Trik agar Label mati tapi Refresh tetap nyala:
         sub_row = col_left.row(align=True)
         
-        # Tombol Label (Mati jika sudah terbaru)
-        btn_label = "Versi lu udeh paling baru." if core.status == 'LATEST' else "Periksa Pembaruan Sekarang"
-        label_op = sub_row.operator("quicktools.check_update", text=btn_label)
+        # 1. Bikin kolom khusus untuk Label (Mati jika LATEST)
+        col_label = sub_row.column(align=True)
         if core.status == 'LATEST':
-            sub_row.enabled = False # Tombol kiri jadi abu-abu
+            col_label.enabled = False 
+        
+        btn_label = "Versi lu udeh paling baru." if core.status == 'LATEST' else "Periksa Pembaruan Sekarang"
+        col_label.operator("quicktools.check_update", text=btn_label)
             
-        # Tombol Refresh Kecil (Selalu Aktif di sebelah kanan label)
-        refresh_row = sub_col_refresh = sub_row.column(align=True) # Trick buat dapet kolom baru dlm row
-        refresh_row.enabled = True 
-        refresh_row.operator("quicktools.check_update", text="", icon='FILE_REFRESH')
+        # 2. Bikin kolom khusus untuk Refresh (Selalu Nyala)
+        col_refresh = sub_row.column(align=True)
+        col_refresh.enabled = True 
+        col_refresh.operator("quicktools.check_update", text="", icon='FILE_REFRESH')
 
     # === SISI KANAN: MAINTENANCE / RESTORE ===
     col_right = row_action.column(align=True)
@@ -121,10 +123,6 @@ def updater_draw_preferences(parent, context):
         footer.label(text=core.error_message, icon='ERROR')
     else:
         footer.label(text=f"Terakhir diperiksa: {core.last_check}", icon='TIME')
-
-    # 3. FOOTER (Informasi Terakhir Dicek)
-    main_box.separator()
-    main_box.label(text=f"Terakhir diperiksa: {core.last_check}", icon='TIME')
 
 def register():
     bpy.utils.register_class(QT_OT_CheckUpdate)
