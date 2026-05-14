@@ -98,8 +98,8 @@ def register():
         bpy.app.timers.register(timer_func)
     
     license_check.register()
-    updater_core()
-    updater_ui()
+    updater_core.register()
+    updater_ui.register()
     library_logic.register()
     manager_logic.register()
     quick_pose_core.register()
