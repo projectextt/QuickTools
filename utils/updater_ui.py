@@ -57,13 +57,11 @@ def updater_draw_preferences(parent, context):
     addon_name = __package__.split('.')[0]
     prefs = context.preferences.addons[addon_name].preferences
     
-    # Bungkus dalam satu Box utama
     main_box = layout.box()
     
-    # Header & Info Versi (Statis)
+    # 1. HEADER (Info Versi)
     header = main_box.row()
     header.label(text="PENGATURAN PEMBARUAN QUICKTOOLS", icon='SETTINGS')
-    
     curr_v = ".".join(map(str, core.CURRENT_VERSION))
     header.label(text=f"Versi: {curr_v}")
 
@@ -93,32 +91,29 @@ def updater_draw_preferences(parent, context):
     col_refresh.scale_x = 1.2 # Biar kotaknya agak proporsional buat ikon
     col_refresh.operator("quicktools.check_update", text="", icon='FILE_REFRESH')
 
-    # === SISI KANAN: MAINTENANCE / RESTORE ===
+    # === SISI JAUH KANAN: RESTORE ===
     row_action.separator()
     col_res = row_action.column(align=True)
-    
-    # Cek folder backup dengan Try-Except (Self-Report)
+
+    # Kita taruh pengecekannya di sini sebelum menggambar tombol
     backup_ready = False
     try:
         backup_ready = core.check_backup_exists()
     except Exception as e:
-        print(f"QuickTools Error: Gagal akses folder backup - {e}")
-        # Tetap False jika error
+        # Self-report ke console kalau ada masalah sistem
+        print(f"QuickTools UI Error: Gagal deteksi backup - {e}")
 
-    # Tombol Restore (Selalu ada, tapi Disable kalau gak ada backup)
-    row_res = col_right.row()
-    row_res.enabled = backup_ready
-    row_res.operator("quicktools.restore_backup", text="Kembalikan Versi", icon='LOOP_BACK')
+    # Tombol Restore (Selalu ada, tapi Disable/Abu-abu kalau gak ada backup)
+    col_res.enabled = backup_ready 
+    col_res.operator("quicktools.restore_backup", text="Kembalikan Versi", icon='LOOP_BACK')
 
-    # --- FOOTER INFO ---
+    # 3. FOOTER (Info Waktu dari Preferences)
     main_box.separator()
-    footer = main_box.row()
-    footer.scale_y = 0.8
-    
     if core.status == 'ERROR':
-        footer.label(text=core.error_message, icon='ERROR')
+        main_box.label(text=core.error_message, icon='ERROR')
     else:
-        footer.label(text=f"Terakhir diperiksa: {core.last_check}", icon='TIME')
+        # Baca dari prefs.last_update_check, bukan dari core.last_check
+        main_box.label(text=f"Terakhir diperiksa: {prefs.last_update_check}", icon='TIME')
 
 def register():
     bpy.utils.register_class(QT_OT_CheckUpdate)
