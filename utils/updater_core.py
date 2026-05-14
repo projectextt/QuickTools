@@ -95,10 +95,8 @@ def run_update_process():
         for root, dirs, files in os.walk(addon_dir):
             for f in files:
                 if f.endswith(".pyc") or f.endswith(".pyo"):
-                    os.remove(os.path.join(root, f))
-            for d in dirs:
-                if d == "__pycache__":
-                    shutil.rmtree(os.path.join(root, d))
+                    try: os.remove(os.path.join(root, f))
+                    except: pass
 
         # 7. Timpa File Baru
         for item in os.listdir(new_content_dir):
@@ -111,8 +109,12 @@ def run_update_process():
                 shutil.copy2(s, d)
 
         # 8. Selesai
-        show_message("Update Sukses! Klik OK untuk menutup Blender dan menerapkan perubahan.", title="Berhasil")
-        bpy.ops.quicktools.restart_blender('INVOKE_DEFAULT')
+        def draw_success(self, context):
+            self.layout.label(text="Update Selesai! Blender perlu ditutup untuk menerapkan perubahan.")
+            self.layout.label(text="Silakan buka kembali Blender setelah ini.")
+
+        bpy.context.window_manager.popup_menu(draw_success, title="Update Berhasil", icon='CHECKMARK')
+        bpy.ops.wm.quit_blender()
         
     except Exception as e:
         show_message(str(e), title="Update Gagal", icon='ERROR')
