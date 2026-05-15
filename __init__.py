@@ -53,16 +53,10 @@ def reload_preview_on_load(dummy):
 class QT_Preferences(bpy.types.AddonPreferences):
     bl_idname = __package__
 
+    
     license_key: bpy.props.StringProperty(
         name="License Key",
         description="Masukkan License Key dari Admin",
-        default="",
-        subtype='PASSWORD'
-    )
-    
-    github_token: bpy.props.StringProperty(
-        name="QuickTools Token",
-        description="Masukkan QuickTools Token",
         default="",
         subtype='PASSWORD'
     )
