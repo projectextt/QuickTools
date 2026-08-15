@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Quick Tools",
     "author": "projectextt",
-    "version": (4, 6, 0),
+    "version": (4, 7, 2),
     "blender": (4, 2, 0),
     "location": "View3D > Sidebar > QuickTools",
     "description": "Kumpulan tools animasi dalam satu tab",
