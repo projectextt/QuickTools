@@ -1,43 +1,40 @@
 bl_info = {
     "name": "Quick Tools",
     "author": "projectextt",
-    "version": (4, 7, 2),
+    "version": (4, 7, 5),
     "blender": (4, 2, 0),
     "location": "View3D > Sidebar > QuickTools",
     "description": "Kumpulan tools animasi dalam satu tab",
     "category": "Animation",
 }
-	
+
 import bpy
-import importlib
 from bpy.app.handlers import persistent
 
 from .utils import (
-            license_check,
-            )
+    license_check,
+)
 
-from .core import   (
-        library_logic,
-        manager_logic,
-        quick_pose_core,
-        extra_logic,
-        collection_logic,
-        child_logic,
-        quick_anim_layer,
-        snap_logic,
-        motion_path_logic,
-        quick_display_layer,
-        empty_logic,
-        path_logic,
-        updater_core,
-        )
+from .core import (
+    library_logic,
+    manager_logic,
+    quick_pose_core,
+    extra_logic,
+    collection_logic,
+    child_logic,
+    quick_anim_layer,
+    snap_logic,
+    motion_path_logic,
+    quick_display_layer,
+    empty_logic,
+    path_logic,
+    updater_core,
+)
 
 from .ui import (
-            main_panel,
-            updater_ui,
-            )
-
-from .core.insert import child_preset_logic
+    main_panel,
+    updater_ui,
+)
 
 
 @persistent
@@ -50,10 +47,10 @@ def reload_preview_on_load(dummy):
     if not bpy.app.timers.is_registered(timer_func):
         bpy.app.timers.register(timer_func)
 
+
 class QT_Preferences(bpy.types.AddonPreferences):
     bl_idname = __package__
 
-    
     license_key: bpy.props.StringProperty(
         name="License Key",
         description="Masukkan License Key dari Admin",
@@ -86,6 +83,7 @@ class QT_Preferences(bpy.types.AddonPreferences):
 def register():
     bpy.utils.register_class(QT_Preferences)
     
+    # Proteksi agar handler tidak terdaftar ganda
     if reload_preview_on_load not in bpy.app.handlers.load_post:
         bpy.app.handlers.load_post.append(reload_preview_on_load)
     
@@ -102,7 +100,6 @@ def register():
     collection_logic.register()
     extra_logic.register()
     child_logic.register()
-    child_preset_logic.register()
     motion_path_logic.register()
     quick_display_layer.register()
     quick_anim_layer.register()
@@ -110,7 +107,8 @@ def register():
     empty_logic.register()
     path_logic.register()
     main_panel.register()
-    
+
+
 def unregister():
     timer_func = manager_logic.slb_preview_timer
     if bpy.app.timers.is_registered(timer_func):
@@ -126,7 +124,6 @@ def unregister():
     quick_anim_layer.unregister()
     quick_display_layer.unregister()
     motion_path_logic.unregister()
-    child_preset_logic.unregister()
     child_logic.unregister()
     extra_logic.unregister()
     collection_logic.unregister()
