@@ -37,7 +37,6 @@ from .ui import (
             updater_ui,
             )
 
-from .core.insert import child_preset_logic
 
 
 @persistent
